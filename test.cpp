@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cmath>
+#include <array>
 // #include <iomanip>
 
 // Define constants
@@ -33,6 +34,8 @@ const double V_c = 2 * pi * e_squared / (epsilon * g_G);
 const double kin = -c_sqd * hbar * hbar * g_G * g_G / (2 * mstar);
 
 // reciprocal lattice vectors
+double arr = {1 / 2, std::sqrt(3) / 2};
+double K_1 = g_G * arr;
 
 int main()
 {
