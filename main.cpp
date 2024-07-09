@@ -111,7 +111,7 @@ rowvec Gamma = rowvec({0, 0});
 rowvec Km = rowvec({g_4(0) / 2, -g_4(0) * tan(30 * pi / 180) / 2});
 rowvec Kp = rowvec({g_4(0) / 2, g_4(0) * tan(30 * pi / 180) / 2});
 
-int main()
+void Defining_Paths()
 {
     // First Path
     double S1_x = -Km(0);
@@ -171,8 +171,40 @@ int main()
     arma::vec P4_y = S4_y * arma::ones(P4_x.size());
     // End of the Fourth path
 
+    for (int i = 0; i < P4_y.size(); i++)
+    {
+        std::cout << P4_y(i) << std::endl;
+    }
     // Print the results
     // P4_x.print("P2_y:");
+}
+int main()
+{
+    Defining_Paths();
 
+    // Print the contents of the vector
+    for (size_t i = 0; i < sixth_shell_gs.size(); ++i)
+    {
+        std::cout << "g_" << i << ": ";
+        sixth_shell_gs[i].print();
+    }
+    // arma::mat w_on_g2 = arma::zeros()
+    size_t rows = sixth_shell_gs.size();
+    size_t cols = sixth_shell_gs.size();
+
+    // Create complex matrices
+    arma::cx_mat w_on_g2(rows, cols, arma::fill::zeros);
+    arma::cx_mat w_on_g3(rows, cols, arma::fill::zeros);
+    arma::cx_mat Delta_Odd(rows, cols, arma::fill::zeros);
+    arma::cx_mat Delta_Even(rows, cols, arma::fill::zeros);
+
+    // Print matrices
+    /*w_on_g2.print("w_on_g2:");
+    w_on_g3.print("w_on_g3:");
+    Delta_Odd.print("Delta_Odd:");
+    Delta_Even.print("Delta_Even:");*/
+
+    // Print dimensions to verify
+    std::cout << "Dimensions: " << rows << "x" << cols << std::endl;
     return 0;
 }
