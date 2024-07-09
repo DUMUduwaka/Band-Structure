@@ -1,0 +1,3 @@
+/Users/usithamihiranga/Desktop/C++ Code/Band-Structure/build/CMakeFiles/BandStructure.dir
+/Users/usithamihiranga/Desktop/C++ Code/Band-Structure/build/CMakeFiles/edit_cache.dir
+/Users/usithamihiranga/Desktop/C++ Code/Band-Structure/build/CMakeFiles/rebuild_cache.dir
