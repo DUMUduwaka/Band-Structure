@@ -20,6 +20,7 @@ mat ns = {
     {-1, 0},
     {0, -1},
     {1, -1}};
+
 // first shell is just the 0 vector
 rowvec g_0 = 0 * K_1 + 0 * K_2;
 
@@ -91,13 +92,87 @@ std::vector<arma::rowvec> seventh_shell_gs = {g_0, g_1, g_2, g_3, g_4, g_5, g_6,
                                               g_19, g_20, g_21, g_22, g_23, g_24, g_25, g_26, g_27, g_28, g_29, g_30, g_31, g_32, g_33, g_34, g_35,
                                               g_36, g_37, g_38, g_39, g_40, g_41, g_42};
 
+// Calculate g_index
+arma::vec g_index = arma::regspace(0, sixth_shell_gs.size() - 1);
+
+const int nvalleys = 2;
+const int nlayers = 2;
+const int ngs = sixth_shell_gs.size();
+const int Hdim = nvalleys * nvalleys * ngs;
+const int tau = 1;
+
+arma::vec valleys = arma::regspace(0, nvalleys - 1);
+arma::vec gs = arma::regspace(0, ngs - 1);
+arma::vec layers = arma::regspace(0, nlayers - 1);
+
+// Defining high-symmetric points of the moire Brillouin zone
+rowvec Kappa = (4 * pi / (3 * a_M)) * rowvec({1, 0});
+rowvec Gamma = rowvec({0, 0});
+rowvec Km = rowvec({g_4(0) / 2, -g_4(0) * tan(30 * pi / 180) / 2});
+rowvec Kp = rowvec({g_4(0) / 2, g_4(0) * tan(30 * pi / 180) / 2});
+
 int main()
 {
-    std::cout << "jhdh" << std::endl;
-    for (int i = 0; i < 12; i++)
+    // First Path
+    double S1_x = -Km(0);
+    double S1_y = -Km(1);
+    double F1_x = Gamma(0);
+    double F1_y = Gamma(1);
+
+    arma::vec P1_x = arma::linspace(S1_x, F1_x, num_k);
+    arma::vec P1_y = arma::zeros(P1_x.size());
+
+    double x = 0;
+    double y = 0;
+    for (size_t j = 0; j < P1_x.n_elem; j++)
     {
-        std::cout << third_shell_gs[i] << " ";
+        x = P1_x(j);
+        y = x * (F1_y - S1_y) / (F1_x - S1_x);
+        P1_y(j) = y;
     }
-    std::cout << std::endl;
+    // End First Path
+
+    // Second Path
+    double S2_x = Gamma(0);
+    double S2_y = Gamma(1);
+    double F2_x = Km(0);
+    double F2_y = Km(1);
+
+    arma::vec P2_x = arma::linspace(S2_x, F2_x, num_k);
+    arma::vec P2_y = arma::zeros(P2_x.size());
+
+    double x1 = 0;
+    double y1 = 0;
+    for (size_t j = 0; j < P2_x.n_elem; j++)
+    {
+        x1 = P2_x(j);
+        y1 = x1 * (F2_y - S2_y) / (F2_x - S2_x);
+        P2_y(j) = y1;
+    }
+    // End of the Second Path
+
+    // Third Path
+    double S3_x = Km(0);
+    double S3_y = Km(1);
+    double F3_x = Kp(0);
+    double F3_y = Kp(1);
+
+    arma::vec P3_x = arma::linspace(S3_x, F3_x, num_k);
+    arma::vec P3_y = arma::linspace(S3_y, F3_y, num_k);
+    // End of the third path
+
+    // Fourth Path
+    double S4_x = Kp(0);
+    double S4_y = Kp(1);
+    double F4_x = -Km(0);
+    double F4_y = -Km(1);
+
+    arma::vec P4_x = arma::linspace(S4_x, F4_x, num_k);
+    arma::vec P4_y = S4_y * arma::ones(P4_x.size());
+    // End of the Fourth path
+
+    // Print the results
+    // P4_x.print("P2_y:");
+
     return 0;
 }
