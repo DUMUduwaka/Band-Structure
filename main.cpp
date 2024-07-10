@@ -178,16 +178,10 @@ void Defining_Paths()
     // Print the results
     // P4_x.print("P2_y:");
 }
-int main()
-{
-    Defining_Paths();
 
-    // Print the contents of the vector
-    for (size_t i = 0; i < sixth_shell_gs.size(); ++i)
-    {
-        std::cout << "g_" << i << ": ";
-        sixth_shell_gs[i].print();
-    }
+/*void populate_matrices()
+{
+    const double tol = 1e-5;
     // arma::mat w_on_g2 = arma::zeros()
     size_t rows = sixth_shell_gs.size();
     size_t cols = sixth_shell_gs.size();
@@ -198,13 +192,136 @@ int main()
     arma::cx_mat Delta_Odd(rows, cols, arma::fill::zeros);
     arma::cx_mat Delta_Even(rows, cols, arma::fill::zeros);
 
-    // Print matrices
-    /*w_on_g2.print("w_on_g2:");
-    w_on_g3.print("w_on_g3:");
-    Delta_Odd.print("Delta_Odd:");
-    Delta_Even.print("Delta_Even:");*/
-
+    w_on_g2.print("w_on_g2:");
     // Print dimensions to verify
     std::cout << "Dimensions: " << rows << "x" << cols << std::endl;
+
+    arma::mat sixth_shell_mat(sixth_shell_gs.size(), g_0.size());
+    for (int i = 0; i < sixth_shell_gs.size(); i++)
+    {
+        sixth_shell_mat.row(i) = sixth_shell_gs[i];
+    }
+    sixth_shell_mat.print();
+
+    // rowvec g = sixth_shell_mat.row(1);
+    // rowvec gp = sixth_shell_mat.row(1);
+    // rowvec g_test = g - gp;
+    // g_test.print();
+
+    for (size_t G = 0; G < rows; ++G)
+    {
+        for (size_t Gp = 0; Gp < rows; ++Gp)
+        {
+            rowvec g = sixth_shell_mat.row(G);
+            rowvec gp = sixth_shell_mat.row(Gp);
+            rowvec g_test = g - gp;
+
+            if (approx_equal(g_test, g_1, "absdiff", tol) || approx_equal(g_test, g_3, "absdiff", tol) || approx_equal(g_test, g_5, "absdiff", tol))
+            {
+                Delta_Odd(G, Gp) = cx_double(1, 0);
+            }
+            if (approx_equal(g_test, g_2, "absdiff", tol) || approx_equal(g_test, g_4, "absdiff", tol) || approx_equal(g_test, g_6, "absdiff", tol))
+            {
+                Delta_Even(G, Gp) = cx_double(1, 0);
+            }
+            if (approx_equal(g_test, g_2, "absdiff", tol))
+            {
+                w_on_g2(G, Gp) = cx_double(1, 0);
+            }
+            if (approx_equal(g_test, g_3, "absdiff", tol))
+            {
+                w_on_g3(G, Gp) = cx_double(1, 0);
+            }
+        }
+    }
+}*/
+
+int main()
+{
+    Defining_Paths();
+
+    const double tol = 1e-5;
+    // arma::mat w_on_g2 = arma::zeros()
+    size_t rows = sixth_shell_gs.size();
+    size_t cols = sixth_shell_gs.size();
+
+    // Create complex matrices
+    arma::cx_mat w_on_g2(rows, cols, arma::fill::zeros);
+    arma::cx_mat w_on_g3(rows, cols, arma::fill::zeros);
+    arma::cx_mat Delta_Odd(rows, cols, arma::fill::zeros);
+    arma::cx_mat Delta_Even(rows, cols, arma::fill::zeros);
+
+    w_on_g2.print("w_on_g2:");
+    // Print dimensions to verify
+    std::cout << "Dimensions: " << rows << "x" << cols << std::endl;
+
+    arma::mat sixth_shell_mat(sixth_shell_gs.size(), g_0.size());
+    for (int i = 0; i < sixth_shell_gs.size(); i++)
+    {
+        sixth_shell_mat.row(i) = sixth_shell_gs[i];
+    }
+    sixth_shell_mat.print();
+
+    // rowvec g = sixth_shell_mat.row(1);
+    // rowvec gp = sixth_shell_mat.row(1);
+    // rowvec g_test = g - gp;
+    // g_test.print();
+
+    for (size_t G = 0; G < rows; ++G)
+    {
+        for (size_t Gp = 0; Gp < rows; ++Gp)
+        {
+            rowvec g = sixth_shell_mat.row(G);
+            rowvec gp = sixth_shell_mat.row(Gp);
+            rowvec g_test = g - gp;
+
+            if (approx_equal(g_test, g_1, "absdiff", tol) || approx_equal(g_test, g_3, "absdiff", tol) || approx_equal(g_test, g_5, "absdiff", tol))
+            {
+                Delta_Odd(G, Gp) = cx_double(1, 0);
+            }
+            if (approx_equal(g_test, g_2, "absdiff", tol) || approx_equal(g_test, g_4, "absdiff", tol) || approx_equal(g_test, g_6, "absdiff", tol))
+            {
+                Delta_Even(G, Gp) = cx_double(1, 0);
+            }
+            if (approx_equal(g_test, g_2, "absdiff", tol))
+            {
+                w_on_g2(G, Gp) = cx_double(1, 0);
+            }
+            if (approx_equal(g_test, g_3, "absdiff", tol))
+            {
+                w_on_g3(G, Gp) = cx_double(1, 0);
+            }
+        }
+    }
+
+    // LP matrix
+    arma::cx_mat LP(2, 2);
+    LP(0, 0) = V * exp(complex<double>(0.0, psi));
+    LP(0, 1) = complex<double>(0.0, 0.0);
+    LP(1, 0) = complex<double>(0.0, 0.0);
+    LP(1, 1) = V * exp(complex<double>(0.0, -psi));
+
+    // DT matrix
+    arma::cx_mat DT(2, 2);
+    DT(0, 0) = complex<double>(0.0, 0.0);
+    DT(0, 1) = w;
+    DT(1, 0) = complex<double>(0.0, 0.0);
+    DT(1, 1) = complex<double>(0.0, 0.0);
+
+    // DTC matrix
+    arma::cx_mat DTC(2, 2);
+    DTC(0, 0) = complex<double>(0.0, 0.0);
+    DTC(0, 1) = complex<double>(0.0, 0.0);
+    DTC(1, 0) = w;
+    DTC(1, 1) = complex<double>(0.0, 0.0);
+
+    // Print the matrices to verify
+    LP.print("LP:");
+    DT.print("DT:");
+    DTC.print("DTC:");
+
+    arma::mat tunneling = arma::kron(w_on_g2, DTC);
+    tunneling.print();
+
     return 0;
 }
