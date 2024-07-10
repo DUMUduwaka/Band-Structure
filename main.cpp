@@ -111,7 +111,37 @@ rowvec Gamma = rowvec({0, 0});
 rowvec Km = rowvec({g_4(0) / 2, -g_4(0) * tan(30 * pi / 180) / 2});
 rowvec Kp = rowvec({g_4(0) / 2, g_4(0) * tan(30 * pi / 180) / 2});
 
-void Defining_Paths()
+// Kinetic Energy Function Definition
+cx_mat KE_SH(double kx, double ky, const mat &G)
+{
+    vec ke_along_g;
+    ke_along_g.set_size(2 * G.n_rows); // Ensure size is double the number of rows in G
+
+    cx_mat LAYER_KE_G = eye<cx_mat>(2 * G.n_rows, 2 * G.n_rows);
+
+    for (size_t g = 0; g < G.n_rows; ++g)
+    {
+        rowvec ke_g_b_vec = {kx + G(g, 0) / g_G - Kp(0) / g_G, ky + G(g, 1) / g_G - Kp(1) / g_G};
+        double ke_g_b = dot(ke_g_b_vec, ke_g_b_vec);
+
+        rowvec ke_g_t_vec = {kx + G(g, 0) / g_G - Km(0) / g_G, ky + G(g, 1) / g_G - Km(1) / g_G};
+        double ke_g_t = dot(ke_g_t_vec, ke_g_t_vec);
+
+        ke_along_g(2 * g) = ke_g_b;
+        ke_along_g(2 * g + 1) = ke_g_t;
+    }
+
+    arma::cx_mat ke_along_mat(2 * G.n_rows, 2 * G.n_rows, arma::fill::zeros);
+    for (int i = 0; i < 2 * G.n_rows; i++)
+    {
+        ke_along_mat(i, i) = ke_along_g(i);
+    }
+    // Convert ke_along_g to a column vector for matrix multiplication
+    // cx_vec ke_along_g_vec(ke_along_g);
+
+    return kin * ke_along_mat;
+}
+int main()
 {
     // First Path
     double S1_x = -Km(0);
@@ -177,68 +207,6 @@ void Defining_Paths()
     }
     // Print the results
     // P4_x.print("P2_y:");
-}
-
-/*void populate_matrices()
-{
-    const double tol = 1e-5;
-    // arma::mat w_on_g2 = arma::zeros()
-    size_t rows = sixth_shell_gs.size();
-    size_t cols = sixth_shell_gs.size();
-
-    // Create complex matrices
-    arma::cx_mat w_on_g2(rows, cols, arma::fill::zeros);
-    arma::cx_mat w_on_g3(rows, cols, arma::fill::zeros);
-    arma::cx_mat Delta_Odd(rows, cols, arma::fill::zeros);
-    arma::cx_mat Delta_Even(rows, cols, arma::fill::zeros);
-
-    w_on_g2.print("w_on_g2:");
-    // Print dimensions to verify
-    std::cout << "Dimensions: " << rows << "x" << cols << std::endl;
-
-    arma::mat sixth_shell_mat(sixth_shell_gs.size(), g_0.size());
-    for (int i = 0; i < sixth_shell_gs.size(); i++)
-    {
-        sixth_shell_mat.row(i) = sixth_shell_gs[i];
-    }
-    sixth_shell_mat.print();
-
-    // rowvec g = sixth_shell_mat.row(1);
-    // rowvec gp = sixth_shell_mat.row(1);
-    // rowvec g_test = g - gp;
-    // g_test.print();
-
-    for (size_t G = 0; G < rows; ++G)
-    {
-        for (size_t Gp = 0; Gp < rows; ++Gp)
-        {
-            rowvec g = sixth_shell_mat.row(G);
-            rowvec gp = sixth_shell_mat.row(Gp);
-            rowvec g_test = g - gp;
-
-            if (approx_equal(g_test, g_1, "absdiff", tol) || approx_equal(g_test, g_3, "absdiff", tol) || approx_equal(g_test, g_5, "absdiff", tol))
-            {
-                Delta_Odd(G, Gp) = cx_double(1, 0);
-            }
-            if (approx_equal(g_test, g_2, "absdiff", tol) || approx_equal(g_test, g_4, "absdiff", tol) || approx_equal(g_test, g_6, "absdiff", tol))
-            {
-                Delta_Even(G, Gp) = cx_double(1, 0);
-            }
-            if (approx_equal(g_test, g_2, "absdiff", tol))
-            {
-                w_on_g2(G, Gp) = cx_double(1, 0);
-            }
-            if (approx_equal(g_test, g_3, "absdiff", tol))
-            {
-                w_on_g3(G, Gp) = cx_double(1, 0);
-            }
-        }
-    }
-}*/
-
-int main()
-{
-    Defining_Paths();
 
     const double tol = 1e-5;
     // arma::mat w_on_g2 = arma::zeros()
@@ -320,8 +288,76 @@ int main()
     DT.print("DT:");
     DTC.print("DTC:");
 
-    arma::mat tunneling = arma::kron(w_on_g2, DTC);
-    tunneling.print();
+    arma::cx_mat tunneling = arma::kron(w_on_g2, DTC) + arma::kron(w_on_g3, DTC) + arma::kron(arma::trans(w_on_g2), DT) + arma::kron(arma::trans(w_on_g3), DT) + arma::kron(arma::eye(37, 37), DT + DTC);
+    arma::cx_mat layer_potential = arma::kron(Delta_Even, LP) + arma::kron(Delta_Odd, arma::conj(LP));
+    arma::cx_mat potential = tunneling + layer_potential;
+    // potential.print();
 
+    // Initialize path_1_eig matrix
+    mat path_1_eig(num_k, 74, fill::zeros); // Assuming 74 eigenvalues
+
+    for (size_t i = 0; i < num_k; ++i)
+    {
+        double k_x = P1_x(i) / g_G;
+        double k_y = P1_y(i) / g_G;
+        cx_mat Kinetic = KE_SH(k_x, k_y, sixth_shell_mat);
+        cx_mat Hamiltonian = potential + Kinetic;
+
+        // Compute eigenvalues
+        vec eigval = eig_sym(Hamiltonian);
+
+        // Store the eigenvalues in the path_1_eig matrix
+        path_1_eig.row(i) = eigval.t(); // Transpose to match the row assignment
+    }
+
+    mat path_2_eig(num_k, 74, fill::zeros); // Assuming 74 eigenvalues
+
+    for (size_t i = 0; i < num_k; ++i)
+    {
+        double k_x = P2_x(i) / g_G;
+        double k_y = P2_y(i) / g_G;
+        cx_mat Kinetic = KE_SH(k_x, k_y, sixth_shell_mat);
+        cx_mat Hamiltonian = potential + Kinetic;
+
+        // Compute eigenvalues
+        vec eigval = eig_sym(Hamiltonian);
+
+        // Store the eigenvalues in the path_1_eig matrix
+        path_2_eig.row(i) = eigval.t(); // Transpose to match the row assignment
+    }
+
+    mat path_3_eig(num_k, 74, fill::zeros); // Assuming 74 eigenvalues
+
+    for (size_t i = 0; i < num_k; ++i)
+    {
+        double k_x = P3_x(i) / g_G;
+        double k_y = P3_y(i) / g_G;
+        cx_mat Kinetic = KE_SH(k_x, k_y, sixth_shell_mat);
+        cx_mat Hamiltonian = potential + Kinetic;
+
+        // Compute eigenvalues
+        vec eigval = eig_sym(Hamiltonian);
+
+        // Store the eigenvalues in the path_1_eig matrix
+        path_3_eig.row(i) = eigval.t(); // Transpose to match the row assignment
+    }
+
+    mat path_4_eig(num_k, 74, fill::zeros); // Assuming 74 eigenvalues
+
+    for (size_t i = 0; i < num_k; ++i)
+    {
+        double k_x = P4_x(i) / g_G;
+        double k_y = P4_y(i) / g_G;
+        cx_mat Kinetic = KE_SH(k_x, k_y, sixth_shell_mat);
+        cx_mat Hamiltonian = potential + Kinetic;
+
+        // Compute eigenvalues
+        vec eigval = eig_sym(Hamiltonian);
+
+        // Store the eigenvalues in the path_1_eig matrix
+        path_4_eig.row(i) = eigval.t(); // Transpose to match the row assignment
+    }
+
+    // path_1_eig.print("path_1_eig:");
     return 0;
 }
