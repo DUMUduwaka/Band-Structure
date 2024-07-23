@@ -358,6 +358,7 @@ int main()
         path_4_eig.row(i) = eigval.t(); // Transpose to match the row assignment
     }
 
-    // path_1_eig.print("path_1_eig:");
+    path_4_eig.print("path_2_eig:");
+
     return 0;
 }
